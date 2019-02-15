@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KsDumperDriver", "KsDumperDriver\KsDumperDriver.vcxproj", "{8EADAB93-F111-43AF-9E10-2376AE515491}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KsDumperClient", "KsDumperClient\KsDumperClient.csproj", "{7881B99D-0B5A-44E7-AF34-80A0ECFFD5DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8EADAB93-F111-43AF-9E10-2376AE515491}.Debug|x64.ActiveCfg = Release|x64
+		{8EADAB93-F111-43AF-9E10-2376AE515491}.Debug|x64.Build.0 = Release|x64
+		{8EADAB93-F111-43AF-9E10-2376AE515491}.Release|x64.ActiveCfg = Release|x64
+		{8EADAB93-F111-43AF-9E10-2376AE515491}.Release|x64.Build.0 = Release|x64
+		{7881B99D-0B5A-44E7-AF34-80A0ECFFD5DB}.Debug|x64.ActiveCfg = Debug|x64
+		{7881B99D-0B5A-44E7-AF34-80A0ECFFD5DB}.Debug|x64.Build.0 = Debug|x64
+		{7881B99D-0B5A-44E7-AF34-80A0ECFFD5DB}.Release|x64.ActiveCfg = Release|x64
+		{7881B99D-0B5A-44E7-AF34-80A0ECFFD5DB}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B97C5D1A-00B8-411D-9716-A3805DA64FD6}
+	EndGlobalSection
+EndGlobal
