@@ -37,6 +37,7 @@ Considering the nature of this project, it is highly recommended to run it in a 
 ## References
 - https://github.com/not-wlan/drvmap
 - https://github.com/Zer0Mem0ry/KernelBhop
+- https://github.com/NtQuery/Scylla/
 - http://terminus.rewolf.pl/terminus/
 - https://www.unknowncheats.me/
 
