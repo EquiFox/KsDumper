@@ -32,6 +32,8 @@ This project was a way for me to learn about Windows kernel, PE file structure a
 
 Considering the nature of this project, it is highly recommended to run it in a `Virtual Environment`. I am not responsible for any crash or damage that could happen to your system.
 
+**Important**: This tool makes no attempt at hiding itself. If you target protected games, the anti-cheat might flag this as a cheat and ban you after a while. Use a `Virtual Environment` !
+
 ## References
 - https://github.com/not-wlan/drvmap
 - https://github.com/Zer0Mem0ry/KernelBhop
