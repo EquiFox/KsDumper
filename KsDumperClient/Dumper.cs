@@ -27,7 +27,7 @@ namespace KsDumperClient
         private void Dumper_Load(object sender, EventArgs e)
         {
             Logger.OnLog += Logger_OnLog;
-            Logger.Log("KsDumper v1.0 - By EquiFox");
+            Logger.Log("KsDumper v1.1 - By EquiFox");
         }
 
         private void LoadProcessList()

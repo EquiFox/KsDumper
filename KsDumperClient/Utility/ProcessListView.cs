@@ -16,6 +16,7 @@ namespace KsDumperClient.Utility
         public ProcessListView()
         {
             DoubleBuffered = true;
+            Sorting = SortOrder.Ascending;
         }
 
         public void LoadProcesses(ProcessSummary[] processSummaries)
