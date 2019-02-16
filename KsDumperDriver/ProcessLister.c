@@ -1,5 +1,6 @@
 #include "NTUndocumented.h"
 #include "ProcessLister.h"
+#include "Utility.h"
 
 static PSYSTEM_PROCESS_INFORMATION GetRawProcessList()
 {
@@ -12,26 +13,13 @@ static PSYSTEM_PROCESS_INFORMATION GetRawProcessList()
 
 		if (bufferPtr != NULL)
 		{
-			ZwQuerySystemInformation(SystemProcessInformation, bufferPtr, bufferSize, NULL);
+			ZwQuerySystemInformation(SystemProcessInformation, bufferPtr, bufferSize, &bufferSize);
 		}
 	}
 	return (PSYSTEM_PROCESS_INFORMATION)bufferPtr;
 }
 
-static NTSTATUS DriverSleep(int ms)
-{
-	LARGE_INTEGER li;
-	li.QuadPart = -10000;
-
-	for (int i = 0; i < ms; i++)
-	{
-		KeDelayExecutionThread(KernelMode, FALSE, &li);
-		return STATUS_SUCCESS;
-	}
-	return STATUS_UNSUCCESSFUL;
-}
-
-static ULONG CalculateListedProcessListSize(PSYSTEM_PROCESS_INFORMATION rawProcessList)
+static ULONG CalculateProcessListOutputSize(PSYSTEM_PROCESS_INFORMATION rawProcessList)
 {
 	int size = 0;
 
@@ -43,23 +31,29 @@ static ULONG CalculateListedProcessListSize(PSYSTEM_PROCESS_INFORMATION rawProce
 	return size;
 }
 
-static PLDR_DATA_TABLE_ENTRY GetMainModuleEntry(PPEB64 peb)
+static PLDR_DATA_TABLE_ENTRY GetMainModuleDataTableEntry(PPEB64 peb)
 {
-	if (peb->Ldr)
+	if (SanitizeUserPointer(peb, sizeof(PEB64)))
 	{
-		if (!peb->Ldr->Initialized)
+		if (peb->Ldr)
 		{
-			int initLoadCount = 0;
-
-			while (!peb->Ldr->Initialized && initLoadCount++ < 4)
+			if (SanitizeUserPointer(peb->Ldr, sizeof(PEB_LDR_DATA)))
 			{
-				DriverSleep(250);
-			}
-		}
+				if (!peb->Ldr->Initialized)
+				{
+					int initLoadCount = 0;
 
-		if (peb->Ldr->Initialized)		
-		{
-			return CONTAINING_RECORD(peb->Ldr->InLoadOrderModuleList.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+					while (!peb->Ldr->Initialized && initLoadCount++ < 4)
+					{
+						DriverSleep(250);
+					}
+				}
+
+				if (peb->Ldr->Initialized)
+				{
+					return CONTAINING_RECORD(peb->Ldr->InLoadOrderModuleList.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+				}
+			}
 		}
 	}
 	return NULL;
@@ -74,7 +68,7 @@ NTSTATUS GetProcessList(PVOID listedProcessBuffer, INT32 bufferSize, PINT32 requ
 
 	if (rawProcessList)
 	{
-		int expectedBufferSize = CalculateListedProcessListSize(rawProcessList);
+		int expectedBufferSize = CalculateProcessListOutputSize(rawProcessList);
 
 		if (!listedProcessBuffer || bufferSize < expectedBufferSize)
 		{
@@ -102,21 +96,26 @@ NTSTATUS GetProcessList(PVOID listedProcessBuffer, INT32 bufferSize, PINT32 requ
 					__try
 					{
 						mainModuleBase = PsGetProcessSectionBaseAddress(targetProcess);
-						PPEB64 peb = (PPEB64)PsGetProcessPeb(targetProcess);
 
-						if (peb)
+						if (mainModuleBase)
 						{
-							PLDR_DATA_TABLE_ENTRY mainModuleEntry = GetMainModuleEntry(peb);
+							PPEB64 peb = (PPEB64)PsGetProcessPeb(targetProcess);
 
-							if (mainModuleEntry)
+							if (peb)
 							{
-								mainModuleEntryPoint = mainModuleEntry->EntryPoint;
-								mainModuleImageSize = mainModuleEntry->SizeOfImage;
-								isWow64 = IS_WOW64_PE(peb->ImageBaseAddress);
+								PLDR_DATA_TABLE_ENTRY mainModuleEntry = GetMainModuleDataTableEntry(peb);
+								mainModuleEntry = SanitizeUserPointer(mainModuleEntry, sizeof(LDR_DATA_TABLE_ENTRY));
 
-								mainModuleFileName = ExAllocatePool(NonPagedPool, 256 * sizeof(WCHAR));
-								RtlZeroMemory(mainModuleFileName, mainModuleEntry->FullDllName.Length + sizeof(WCHAR));
-								RtlCopyMemory(mainModuleFileName, mainModuleEntry->FullDllName.Buffer, mainModuleEntry->FullDllName.Length);
+								if (mainModuleEntry)
+								{
+									mainModuleEntryPoint = mainModuleEntry->EntryPoint;
+									mainModuleImageSize = mainModuleEntry->SizeOfImage;
+									isWow64 = IS_WOW64_PE(mainModuleBase);
+
+									mainModuleFileName = ExAllocatePool(NonPagedPool, 256 * sizeof(WCHAR));
+									RtlZeroMemory(mainModuleFileName, 256 * sizeof(WCHAR));
+									RtlCopyMemory(mainModuleFileName, mainModuleEntry->FullDllName.Buffer, 256 * sizeof(WCHAR));
+								}
 							}
 						}
 					}
@@ -130,7 +129,7 @@ NTSTATUS GetProcessList(PVOID listedProcessBuffer, INT32 bufferSize, PINT32 requ
 					KeUnstackDetachProcess(&state);
 				}
 
-				if (mainModuleBase)
+				if (mainModuleFileName)
 				{
 					RtlCopyMemory(processSummary->MainModuleFileName, mainModuleFileName, 256 * sizeof(WCHAR));
 					ExFreePool(mainModuleFileName);
@@ -144,6 +143,8 @@ NTSTATUS GetProcessList(PVOID listedProcessBuffer, INT32 bufferSize, PINT32 requ
 					processSummary++;
 					(*processCount)++;
 				}
+
+				ObDereferenceObject(targetProcess);
 			}
 
 			rawProcessList = (PSYSTEM_PROCESS_INFORMATION)(((CHAR*)rawProcessList) + rawProcessList->NextEntryOffset);

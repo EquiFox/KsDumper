@@ -14,47 +14,65 @@ NTSTATUS CopyVirtualMemory(PEPROCESS targetProcess, PVOID sourceAddress, PVOID t
 
 NTSTATUS IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-	NTSTATUS Status;
-	ULONG BytesIO = 0;
+	NTSTATUS status;
+	ULONG bytesIO = 0;
 	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
-	ULONG ControlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+	ULONG controlCode = stack->Parameters.DeviceIoControl.IoControlCode;
 
-	if (ControlCode == IO_COPY_MEMORY)
+	if (controlCode == IO_COPY_MEMORY)
 	{
-		PKERNEL_COPY_MEMORY_OPERATION request = (PKERNEL_COPY_MEMORY_OPERATION)Irp->AssociatedIrp.SystemBuffer;
-		PEPROCESS targetProcess;		
-
-		if (NT_SUCCESS(PsLookupProcessByProcessId(request->targetProcessId, &targetProcess)))
+		if (stack->Parameters.DeviceIoControl.InputBufferLength == sizeof(KERNEL_COPY_MEMORY_OPERATION))
 		{
-			CopyVirtualMemory(targetProcess, request->targetAddress, request->bufferAddress, request->bufferSize);
+			PKERNEL_COPY_MEMORY_OPERATION request = (PKERNEL_COPY_MEMORY_OPERATION)Irp->AssociatedIrp.SystemBuffer;
+			PEPROCESS targetProcess;
+
+			if (NT_SUCCESS(PsLookupProcessByProcessId(request->targetProcessId, &targetProcess)))
+			{
+				CopyVirtualMemory(targetProcess, request->targetAddress, request->bufferAddress, request->bufferSize);
+				ObDereferenceObject(targetProcess);
+			}
+
+			status = STATUS_SUCCESS;
+			bytesIO = sizeof(KERNEL_COPY_MEMORY_OPERATION);
 		}
-
-		Status = STATUS_SUCCESS;
-		BytesIO = sizeof(KERNEL_COPY_MEMORY_OPERATION);
+		else
+		{
+			status = STATUS_INFO_LENGTH_MISMATCH;
+			bytesIO = 0;
+		}
 	}
-	else if (ControlCode == IO_GET_PROCESS_LIST)
+	else if (controlCode == IO_GET_PROCESS_LIST)
 	{
-		PKERNEL_PROCESS_LIST_OPERATION request = (PKERNEL_PROCESS_LIST_OPERATION)Irp->AssociatedIrp.SystemBuffer;
+		if (stack->Parameters.DeviceIoControl.InputBufferLength == sizeof(KERNEL_PROCESS_LIST_OPERATION) &&
+			stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KERNEL_PROCESS_LIST_OPERATION))
+		{
+			PKERNEL_PROCESS_LIST_OPERATION request = (PKERNEL_PROCESS_LIST_OPERATION)Irp->AssociatedIrp.SystemBuffer;
 
-		GetProcessList(request->bufferAddress, request->bufferSize, &request->bufferSize, &request->processCount);
+			GetProcessList(request->bufferAddress, request->bufferSize, &request->bufferSize, &request->processCount);
 
-		Status = STATUS_SUCCESS;
-		BytesIO = sizeof(KERNEL_PROCESS_LIST_OPERATION);
+			status = STATUS_SUCCESS;
+			bytesIO = sizeof(KERNEL_PROCESS_LIST_OPERATION);
+		}
+		else
+		{
+			status = STATUS_INFO_LENGTH_MISMATCH;
+			bytesIO = 0;
+		}
 	}
 	else
 	{
-		Status = STATUS_INVALID_PARAMETER;
-		BytesIO = 0;
+		status = STATUS_INVALID_PARAMETER;
+		bytesIO = 0;
 	}
 
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = BytesIO;
+	Irp->IoStatus.Status = status;
+	Irp->IoStatus.Information = bytesIO;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-	return Status;
+	return status;
 }
 
-NTSTATUS UnsupportedDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ struct _IRP *Irp)
+NTSTATUS UnsupportedDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 {
 	UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -63,7 +81,7 @@ NTSTATUS UnsupportedDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ s
 	return Irp->IoStatus.Status;
 }
 
-NTSTATUS CreateDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ struct _IRP *Irp)
+NTSTATUS CreateDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 {
 	UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -71,7 +89,7 @@ NTSTATUS CreateDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ struct
 	return Irp->IoStatus.Status;
 }
 
-NTSTATUS CloseDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ struct _IRP *Irp)
+NTSTATUS CloseDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 {
 	UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -79,7 +97,16 @@ NTSTATUS CloseDispatch(_In_ struct _DEVICE_OBJECT *DeviceObject, _Inout_ struct 
 	return Irp->IoStatus.Status;
 }
 
-NTSTATUS DriverInitialize(_In_  struct _DRIVER_OBJECT *DriverObject, _In_  PUNICODE_STRING RegistryPath)
+void Unload(IN PDRIVER_OBJECT DriverObject)
+{
+	UNICODE_STRING deviceName;
+
+	RtlInitUnicodeString(&deviceName, L"\\Device\\KsDumper");
+	IoDeleteSymbolicLink(&deviceName);
+	IoDeleteDevice(DriverObject->DeviceObject);
+}
+
+NTSTATUS DriverInitialize(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 {
 	NTSTATUS status;
 	UNICODE_STRING deviceName, symLink;
@@ -100,6 +127,7 @@ NTSTATUS DriverInitialize(_In_  struct _DRIVER_OBJECT *DriverObject, _In_  PUNIC
 
 	if (!NT_SUCCESS(status))
 	{
+		IoDeleteDevice(deviceObject);
 		return status;
 	}
 	deviceObject->Flags |= DO_BUFFERED_IO;
@@ -110,7 +138,7 @@ NTSTATUS DriverInitialize(_In_  struct _DRIVER_OBJECT *DriverObject, _In_  PUNIC
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = &CreateDispatch;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = &CloseDispatch;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = &IoControl;
-	DriverObject->DriverUnload = NULL;	
+	DriverObject->DriverUnload = &Unload;
 	deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	return status;

@@ -103,11 +103,13 @@
   <ItemGroup>
     <ClCompile Include="ProcessLister.c" />
     <ClCompile Include="Driver.c" />
+    <ClCompile Include="Utility.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UserModeBridge.h" />
     <ClInclude Include="ProcessLister.h" />
     <ClInclude Include="NTUndocumented.h" />
+    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
