@@ -99,7 +99,7 @@ NTSTATUS CloseDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 	return Irp->IoStatus.Status;
 }
 
-void Unload(IN PDRIVER_OBJECT DriverObject)
+NTSTATUS Unload(IN PDRIVER_OBJECT DriverObject)
 {
 	IoDeleteSymbolicLink(&symLink);
 	IoDeleteDevice(DriverObject->DeviceObject);
@@ -108,7 +108,7 @@ void Unload(IN PDRIVER_OBJECT DriverObject)
 NTSTATUS DriverInitialize(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 {
 	NTSTATUS status;
-	PDEVICE_OBJECT  deviceObject;
+	PDEVICE_OBJECT deviceObject;
 
 	UNREFERENCED_PARAMETER(RegistryPath);
 
