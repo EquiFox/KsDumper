@@ -6,6 +6,8 @@
 DRIVER_INITIALIZE DriverEntry;
 #pragma alloc_text(INIT, DriverEntry)
 
+UNICODE_STRING deviceName, symLink;
+
 NTSTATUS CopyVirtualMemory(PEPROCESS targetProcess, PVOID sourceAddress, PVOID targetAddress, SIZE_T size)
 {
 	PSIZE_T readBytes;
@@ -97,20 +99,16 @@ NTSTATUS CloseDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 	return Irp->IoStatus.Status;
 }
 
-void Unload(IN PDRIVER_OBJECT DriverObject)
+NTSTATUS Unload(IN PDRIVER_OBJECT DriverObject)
 {
-	UNICODE_STRING deviceName;
-
-	RtlInitUnicodeString(&deviceName, L"\\Device\\KsDumper");
-	IoDeleteSymbolicLink(&deviceName);
+	IoDeleteSymbolicLink(&symLink);
 	IoDeleteDevice(DriverObject->DeviceObject);
 }
 
 NTSTATUS DriverInitialize(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 {
 	NTSTATUS status;
-	UNICODE_STRING deviceName, symLink;
-	PDEVICE_OBJECT  deviceObject;
+	PDEVICE_OBJECT deviceObject;
 
 	UNREFERENCED_PARAMETER(RegistryPath);
 
