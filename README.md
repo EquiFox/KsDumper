@@ -20,7 +20,7 @@ Everything is provided in this release if you want to use it aswell.
 
 - Run `Driver/LoadCapcom.bat` as Admin. Don't press any key or close the window yet !
 - Run `Driver/LoadUnsignedDriver.bat` as Admin.
-- Press enter in the `LoadCapcop` cmd to unload the driver.
+- Press enter in the `LoadCapcom` cmd to unload the driver.
 - Run `KsDumperClient.exe`.
 - Profit !
 
