@@ -43,6 +43,12 @@ namespace KsDumperClient.Utility
 
             string systemRootFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLower();
 
+            if (processCache == null)
+            {
+                MessageBox.Show("Driver not loaded!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             foreach (ProcessSummary processSummary in processCache)
             {
                 if (SystemProcessesHidden &&
@@ -159,6 +165,6 @@ namespace KsDumperClient.Utility
         }
 
         [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
-        private extern static int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);       
+        private extern static int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
     }
 }
