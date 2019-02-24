@@ -7,7 +7,7 @@ using static KsDumperClient.Driver.Operations;
 
 namespace KsDumperClient.Driver
 {
-    public class DriverInterface
+    public class DriverInterface : IDisposable
     {
         private readonly IntPtr driverHandle;
 
@@ -106,5 +106,25 @@ namespace KsDumperClient.Driver
             }
             return false;
         }
+
+        public bool UnloadDriver()
+        {
+            if (driverHandle != WinApi.INVALID_HANDLE_VALUE)
+            {
+                return WinApi.DeviceIoControl(driverHandle, IO_UNLOAD_DRIVER, IntPtr.Zero, 0, IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero);
+            }
+            return false;
+        }
+
+        public void Dispose()
+        {
+            WinApi.CloseHandle(driverHandle);
+        }
+
+        ~DriverInterface()
+        {
+            WinApi.CloseHandle(driverHandle);
+        }
+
     }
 }

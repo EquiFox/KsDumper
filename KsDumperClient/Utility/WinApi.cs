@@ -31,5 +31,8 @@ namespace KsDumperClient.Utility
 
         [DllImport("kernel32.dll")]
         public static extern int GetLongPathName(string path, StringBuilder pszPath, int cchPath);
+
+        [DllImport("kernel32.dll")]
+        public static extern int CloseHandle(IntPtr handle);
     }
 }

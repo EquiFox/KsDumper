@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.refreshMenuBtn = new System.Windows.Forms.ToolStripButton();
+            this.unloadDriverBtn = new System.Windows.Forms.ToolStripButton();
             this.hideSystemProcessMenuBtn = new System.Windows.Forms.ToolStripButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.logsTextBox = new System.Windows.Forms.RichTextBox();
@@ -57,6 +58,7 @@
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshMenuBtn,
+            this.unloadDriverBtn,
             this.hideSystemProcessMenuBtn});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Margin = new System.Windows.Forms.Padding(2);
@@ -75,6 +77,15 @@
             this.refreshMenuBtn.Size = new System.Drawing.Size(50, 19);
             this.refreshMenuBtn.Text = "Refresh";
             this.refreshMenuBtn.Click += new System.EventHandler(this.refreshMenuBtn_Click);
+            // 
+            // unloadDriverBtn
+            // 
+            this.unloadDriverBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.unloadDriverBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.unloadDriverBtn.Name = "unloadDriverBtn";
+            this.unloadDriverBtn.Size = new System.Drawing.Size(83, 19);
+            this.unloadDriverBtn.Text = "Unload Driver";
+            this.unloadDriverBtn.Click += new System.EventHandler(this.unloadDriverBtn_Click);
             // 
             // hideSystemProcessMenuBtn
             // 
@@ -227,6 +238,7 @@
         private System.Windows.Forms.ColumnHeader ImageTypeHeader;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton refreshMenuBtn;
+        private System.Windows.Forms.ToolStripButton unloadDriverBtn;
         private System.Windows.Forms.ToolStripButton hideSystemProcessMenuBtn;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RichTextBox logsTextBox;
@@ -236,4 +248,3 @@
         private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
     }
 }
-

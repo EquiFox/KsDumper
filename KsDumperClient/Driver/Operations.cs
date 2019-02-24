@@ -10,6 +10,8 @@ namespace KsDumperClient.Driver
 
         public static readonly uint IO_COPY_MEMORY = CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1725, METHOD_BUFFERED, FILE_ANY_ACCESS);
 
+        public static readonly uint IO_UNLOAD_DRIVER = CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1726, METHOD_BUFFERED, FILE_ANY_ACCESS);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct KERNEL_PROCESS_LIST_OPERATION
         {
