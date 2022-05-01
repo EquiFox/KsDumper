@@ -39,6 +39,7 @@ namespace KsDumperClient.Utility
 
         private void ReloadItems()
         {
+           this.BeginUpdate();
             Items.Clear();
 
             string systemRootFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLower();
@@ -66,6 +67,7 @@ namespace KsDumperClient.Utility
 
             ListViewItemSorter = new ProcessListViewItemComparer(sortColumnIndex, Sorting);
             Sort();
+            this.EndUpdate();
         }
 
         protected override void OnColumnClick(ColumnClickEventArgs e)
