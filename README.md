@@ -9,6 +9,10 @@ I knew nothing about Windows kernel, PE file structure, so I spent a lot of time
 - Dump any process main module using a kernel driver (both x86 and x64)
 - Rebuild PE32/PE64 header and sections
 - Works on protected system processes & processes with stripped handles (anti-cheats)
+- IMPROVED FORKED FEATURES
+- Auto Refresh (every 100ms)
+- Suspend, resume, kill process
+- Auto dumping of selected exe.
 
 **Note**: Import table isn't rebuilt.
 
