@@ -259,7 +259,7 @@
             this.MaximizeBox = false;
             this.Name = "Dumper";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "NotA Dumper";
+            this.Text = "KsDumper";
             this.Load += new System.EventHandler(this.Dumper_Load);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
