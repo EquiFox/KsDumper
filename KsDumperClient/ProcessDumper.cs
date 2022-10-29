@@ -38,11 +38,11 @@ namespace KsDumperClient
         }
 
 
-        public bool DumpProcess(System.Diagnostics.Process processSummary, out PEFile outputFile1)
+        public bool DumpProcess(System.Diagnostics.Process processSummary, out PEFile outputFile)
         {
             IntPtr basePointer = processSummary.MainModule.BaseAddress;
             IMAGE_DOS_HEADER dosHeader = ReadProcessStruct<IMAGE_DOS_HEADER>(processSummary.Id, basePointer);
-            outputFile1 = default(PEFile);
+            outputFile = default(PEFile);
 
             Logger.SkipLine();
             Logger.Log("Targeting Process: {0} ({1})", processSummary.ProcessName, processSummary.Id);
@@ -93,7 +93,7 @@ namespace KsDumperClient
                     peFile.FixPEHeader();
 
                     Logger.Log("Dump Completed !");
-                    outputFile1 = peFile;
+                    outputFile = peFile;
                     return true;
                 }
                 else
