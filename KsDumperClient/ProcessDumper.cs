@@ -17,6 +17,93 @@ namespace KsDumperClient
             this.kernelDriver = kernelDriver;
         }
 
+        private static bool IsWin64Emulator(System.Diagnostics.Process process)
+        {
+            if ((Environment.OSVersion.Version.Major > 5)
+                || ((Environment.OSVersion.Version.Major == 5) && (Environment.OSVersion.Version.Minor >= 1)))
+            {
+                bool retVal;
+
+                return NativeMethods.IsWow64Process(process.Handle, out retVal) && retVal;
+            }
+
+            return false; // not on 64-bit Windows Emulator
+        }
+
+        internal static class NativeMethods
+        {
+            [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            internal static extern bool IsWow64Process([In] IntPtr process, [Out] out bool wow64Process);
+        }
+
+
+        public bool DumpProcess(System.Diagnostics.Process processSummary, out PEFile outputFile)
+        {
+            IntPtr basePointer = processSummary.MainModule.BaseAddress;
+            IMAGE_DOS_HEADER dosHeader = ReadProcessStruct<IMAGE_DOS_HEADER>(processSummary.Id, basePointer);
+            outputFile = default(PEFile);
+
+            Logger.SkipLine();
+            Logger.Log("Targeting Process: {0} ({1})", processSummary.ProcessName, processSummary.Id);
+
+            if (dosHeader.IsValid)
+            {
+                IntPtr peHeaderPointer = basePointer + dosHeader.e_lfanew;
+                Logger.Log("PE Header Found: 0x{0:x8}", peHeaderPointer.ToInt64());
+
+                IntPtr dosStubPointer = basePointer + Marshal.SizeOf<IMAGE_DOS_HEADER>();
+                byte[] dosStub = ReadProcessBytes(processSummary.Id, dosStubPointer, dosHeader.e_lfanew - Marshal.SizeOf<IMAGE_DOS_HEADER>());
+
+                PEFile peFile;
+
+                if (!IsWin64Emulator(processSummary))
+                {
+                    peFile = Dump64BitPE(processSummary.Id, dosHeader, dosStub, peHeaderPointer);
+                }
+                else
+                {
+                    peFile = Dump32BitPE(processSummary.Id, dosHeader, dosStub, peHeaderPointer);
+                }
+
+                if (peFile != default(PEFile))
+                {
+                    IntPtr sectionHeaderPointer = peHeaderPointer + peFile.GetFirstSectionHeaderOffset();
+
+                    Logger.Log("Header is valid ({0}) !", peFile.Type);
+                    Logger.Log("Parsing {0} Sections...", peFile.Sections.Length);
+
+                    for (int i = 0; i < peFile.Sections.Length; i++)
+                    {
+                        IMAGE_SECTION_HEADER sectionHeader = ReadProcessStruct<IMAGE_SECTION_HEADER>(processSummary.Id, sectionHeaderPointer);
+                        peFile.Sections[i] = new PESection
+                        {
+                            Header = PESection.PESectionHeader.FromNativeStruct(sectionHeader),
+                            InitialSize = (int)sectionHeader.VirtualSize
+                        };
+
+                        ReadSectionContent(processSummary.Id, new IntPtr(basePointer.ToInt64() + sectionHeader.VirtualAddress), peFile.Sections[i]);
+                        sectionHeaderPointer += Marshal.SizeOf<IMAGE_SECTION_HEADER>();
+                    }
+
+                    Logger.Log("Aligning Sections...");
+                    peFile.AlignSectionHeaders();
+
+                    Logger.Log("Fixing PE Header...");
+                    peFile.FixPEHeader();
+
+                    Logger.Log("Dump Completed !");
+                    outputFile = peFile;
+                    return true;
+                }
+                else
+                {
+                    Logger.Log("Bad PE Header !");
+                }
+            }
+            return false;
+        }
+
         public bool DumpProcess(ProcessSummary processSummary, out PEFile outputFile)
         {
             IntPtr basePointer = (IntPtr)processSummary.MainModuleBase;
@@ -27,7 +114,7 @@ namespace KsDumperClient
             Logger.Log("Targeting Process: {0} ({1})", processSummary.ProcessName, processSummary.ProcessId);
 
             if (dosHeader.IsValid)
-            {                
+            {
                 IntPtr peHeaderPointer = basePointer + dosHeader.e_lfanew;
                 Logger.Log("PE Header Found: 0x{0:x8}", peHeaderPointer.ToInt64());
 
@@ -48,7 +135,7 @@ namespace KsDumperClient
                 if (peFile != default(PEFile))
                 {
                     IntPtr sectionHeaderPointer = peHeaderPointer + peFile.GetFirstSectionHeaderOffset();
-                    
+
                     Logger.Log("Header is valid ({0}) !", peFile.Type);
                     Logger.Log("Parsing {0} Sections...", peFile.Sections.Length);
 
@@ -196,7 +283,7 @@ namespace KsDumperClient
                 currentOffset -= currentReadSize;
             }
         }
-        
+
         private int GetInstructionByteCount(byte[] dataBlock)
         {
             for (int i = (dataBlock.Length - 1); i >= 0; i--)

@@ -32,12 +32,16 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.refreshMenuBtn = new System.Windows.Forms.ToolStripButton();
             this.hideSystemProcessMenuBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.logsTextBox = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.dumpMainModuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.suspendProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resumeProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.killProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processList = new KsDumperClient.Utility.ProcessListView();
             this.PIDHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.NameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -46,6 +50,7 @@
             this.EntryPointHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ImageSizeHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ImageTypeHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.fileDumpBtn = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -57,7 +62,8 @@
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshMenuBtn,
-            this.hideSystemProcessMenuBtn});
+            this.hideSystemProcessMenuBtn,
+            this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Margin = new System.Windows.Forms.Padding(2);
             this.toolStrip1.Name = "toolStrip1";
@@ -85,6 +91,17 @@
             this.hideSystemProcessMenuBtn.Size = new System.Drawing.Size(135, 19);
             this.hideSystemProcessMenuBtn.Text = "Show System Processes";
             this.hideSystemProcessMenuBtn.Click += new System.EventHandler(this.hideSystemProcessMenuBtn_Click);
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.CheckOnClick = true;
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(79, 19);
+            this.toolStripButton1.Text = "Auto Refresh";
+            this.toolStripButton1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // groupBox1
             // 
@@ -114,9 +131,12 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dumpMainModuleToolStripMenuItem,
             this.toolStripSeparator1,
-            this.openInExplorerToolStripMenuItem});
+            this.openInExplorerToolStripMenuItem,
+            this.suspendProcessToolStripMenuItem,
+            this.resumeProcessToolStripMenuItem,
+            this.killProcessToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(182, 76);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(182, 120);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // dumpMainModuleToolStripMenuItem
@@ -138,6 +158,27 @@
             this.openInExplorerToolStripMenuItem.Text = "Open In Explorer";
             this.openInExplorerToolStripMenuItem.Click += new System.EventHandler(this.openInExplorerToolStripMenuItem_Click);
             // 
+            // suspendProcessToolStripMenuItem
+            // 
+            this.suspendProcessToolStripMenuItem.Name = "suspendProcessToolStripMenuItem";
+            this.suspendProcessToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.suspendProcessToolStripMenuItem.Text = "Suspend process";
+            this.suspendProcessToolStripMenuItem.Click += new System.EventHandler(this.suspendProcessToolStripMenuItem_Click);
+            // 
+            // resumeProcessToolStripMenuItem
+            // 
+            this.resumeProcessToolStripMenuItem.Name = "resumeProcessToolStripMenuItem";
+            this.resumeProcessToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.resumeProcessToolStripMenuItem.Text = "Resume process";
+            this.resumeProcessToolStripMenuItem.Click += new System.EventHandler(this.resumeProcessToolStripMenuItem_Click);
+            // 
+            // killProcessToolStripMenuItem
+            // 
+            this.killProcessToolStripMenuItem.Name = "killProcessToolStripMenuItem";
+            this.killProcessToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.killProcessToolStripMenuItem.Text = "Kill process";
+            this.killProcessToolStripMenuItem.Click += new System.EventHandler(this.killProcessToolStripMenuItem_Click);
+            // 
             // processList
             // 
             this.processList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -150,10 +191,12 @@
             this.ImageTypeHeader});
             this.processList.ContextMenuStrip = this.contextMenuStrip1;
             this.processList.FullRowSelect = true;
+            this.processList.HideSelection = false;
             this.processList.Location = new System.Drawing.Point(5, 28);
             this.processList.MultiSelect = false;
             this.processList.Name = "processList";
             this.processList.Size = new System.Drawing.Size(992, 491);
+            this.processList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.processList.TabIndex = 2;
             this.processList.UseCompatibleStateImageBehavior = false;
             this.processList.View = System.Windows.Forms.View.Details;
@@ -193,11 +236,22 @@
             this.ImageTypeHeader.Text = "Image Type";
             this.ImageTypeHeader.Width = 72;
             // 
+            // fileDumpBtn
+            // 
+            this.fileDumpBtn.Location = new System.Drawing.Point(135, 4);
+            this.fileDumpBtn.Name = "fileDumpBtn";
+            this.fileDumpBtn.Size = new System.Drawing.Size(75, 23);
+            this.fileDumpBtn.TabIndex = 1;
+            this.fileDumpBtn.Text = "Dump File";
+            this.fileDumpBtn.UseVisualStyleBackColor = true;
+            this.fileDumpBtn.Click += new System.EventHandler(this.fileDumpBtn_Click);
+            // 
             // Dumper
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1004, 756);
+            this.Controls.Add(this.fileDumpBtn);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.processList);
@@ -234,6 +288,11 @@
         private System.Windows.Forms.ToolStripMenuItem dumpMainModuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem suspendProcessToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resumeProcessToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem killProcessToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.Button fileDumpBtn;
     }
 }
 

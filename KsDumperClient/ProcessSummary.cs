@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using KsDumperClient.Driver;
 
 namespace KsDumperClient
 {
@@ -16,6 +17,29 @@ namespace KsDumperClient
         public uint MainModuleImageSize { get; private set; }
         public ulong MainModuleEntryPoint { get; private set; }
         public bool IsWOW64 { get; private set; }
+
+        public static ProcessSummary ProcessSummaryFromID(DriverInterface driver, string processName)
+        {
+            ProcessSummary result = null;
+            ProcessSummary[] processes;
+            driver.GetProcessSummaryList(out processes);
+            //Logger.Log(processes.Length.ToString());
+            if (processes != null)
+            {
+                foreach (ProcessSummary process in processes)
+                {
+                    if (process.ProcessName.ToLower().Contains(processName.ToLower()))
+                    {
+                        Logger.Log(process.ProcessName + "      " + processName);
+                        result = process;
+                        return result;
+                    }
+                }
+            }
+
+            //if (result == null) Logger.Log(processName + " not found!");
+            return result;
+        }
 
         private ProcessSummary(int processId, ulong mainModuleBase, string mainModuleFileName, uint mainModuleImageSize, ulong mainModuleEntryPoint, bool isWOW64)
         {
