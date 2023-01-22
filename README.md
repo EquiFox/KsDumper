@@ -1,3 +1,7 @@
+## 🔴🔴 This repo is mostly outdated due to the Capcom driver being patched 🔴🔴
+Thanks to **mastercodeon314** there's now a port working on Windows 11. Enjoy !  
+https://github.com/mastercodeon314/KsDumper-11
+
 # KsDumper
 ![Demo](https://i.imgur.com/6XyMDxa.gif)
 
