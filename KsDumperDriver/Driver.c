@@ -8,6 +8,10 @@ DRIVER_INITIALIZE DriverEntry;
 
 UNICODE_STRING deviceName, symLink;
 
+PDRIVER_OBJECT pDriverObject;
+
+DRIVER_UNLOAD Unload;
+
 NTSTATUS CopyVirtualMemory(PEPROCESS targetProcess, PVOID sourceAddress, PVOID targetAddress, SIZE_T size)
 {
 	PSIZE_T readBytes;
@@ -61,6 +65,12 @@ NTSTATUS IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			bytesIO = 0;
 		}
 	}
+	else if (controlCode == IO_UNLOAD_DRIVER)
+	{
+		Unload(pDriverObject);
+		bytesIO = 0;
+		status = STATUS_SUCCESS;
+	}
 	else
 	{
 		status = STATUS_INVALID_PARAMETER;
@@ -99,7 +109,7 @@ NTSTATUS CloseDispatch(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp)
 	return Irp->IoStatus.Status;
 }
 
-NTSTATUS Unload(IN PDRIVER_OBJECT DriverObject)
+void Unload(PDRIVER_OBJECT DriverObject)
 {
 	IoDeleteSymbolicLink(&symLink);
 	IoDeleteDevice(DriverObject->DeviceObject);
@@ -114,6 +124,8 @@ NTSTATUS DriverInitialize(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING
 
 	RtlInitUnicodeString(&deviceName, L"\\Device\\KsDumper");
 	RtlInitUnicodeString(&symLink, L"\\DosDevices\\KsDumper");
+
+	pDriverObject = DriverObject;
 
 	status = IoCreateDevice(DriverObject, 0, &deviceName, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE, &deviceObject);
 

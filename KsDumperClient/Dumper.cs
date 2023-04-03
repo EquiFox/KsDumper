@@ -126,5 +126,23 @@ namespace KsDumperClient
             ProcessSummary targetProcess = processList.SelectedItems[0].Tag as ProcessSummary;
             Process.Start("explorer.exe", Path.GetDirectoryName(targetProcess.MainModuleFileName));
         }
+
+        private void unloadDriverBtn_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show("Are you sure?", "Driver unload", MessageBoxButtons.YesNo);
+            if (result == DialogResult.Yes)
+            {
+                bool unloadResult = driver.UnloadDriver();
+                if (unloadResult)
+                {
+                    MessageBox.Show("Unload good");
+                }
+                else
+                {
+                    MessageBox.Show("Unload failed");
+
+                }
+            }
+        }
     }
 }
