@@ -130,9 +130,15 @@ NTSTATUS DriverInitialize(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING
 	}
 	deviceObject->Flags |= DO_BUFFERED_IO;
 
+	/*
+ 	Windows already handles this part, so we dont need
+  	to do this again, take a look at the following link:
+	https://doxygen.reactos.org/d9/d9f/ntoskrnl_2io_2iomgr_2driver_8c_source.html (1712-1731)
+
 	for (ULONG t = 0; t <= IRP_MJ_MAXIMUM_FUNCTION; t++)
 		DriverObject->MajorFunction[t] = &UnsupportedDispatch;
-
+	*/
+	
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = &CreateDispatch;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = &CloseDispatch;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = &IoControl;
